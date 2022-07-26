@@ -1,0 +1,8 @@
+/venv/
+/IMAGES/
+/model_data/
+yolov3/__pycache__/
+/log/
+.idea/
+.ipynb_checkpoints/
+__pycache__/

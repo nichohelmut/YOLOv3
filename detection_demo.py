@@ -16,7 +16,7 @@ import tensorflow as tf
 from yolov3.utils import detect_image, detect_realtime, detect_video, Load_Yolo_model, detect_video_realtime_mp
 from yolov3.configs import *
 
-image_path   = "./IMAGES/kite.jpg"
+image_path   = "./IMAGES/bike.jpg"
 video_path   = "./IMAGES/test.mp4"
 
 yolo = Load_Yolo_model()
