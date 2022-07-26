@@ -9,12 +9,13 @@
 #
 # ================================================================
 import colorsys
-import json
 import random
+import json
 import time
 from multiprocessing import Process, Queue
 
 import cv2
+from google.cloud import storage
 from tensorflow.python.saved_model import tag_constants
 
 from yolov3.yolov4 import *
@@ -132,10 +133,30 @@ def image_preprocess(image, target_size, gt_boxes=None):
         return image_paded, gt_boxes
 
 
-def list_to_dict(lst):
+def list_to_dict(lst, image_area):
     l_split = lst.split(" ")
-    res_dct = {l_split[i]: l_split[i + 1] for i in range(0, len(l_split), 2)}
+    l_split.append(image_area)
+    res_dct = {l_split[i]: [l_split[i + 1], l_split[i + 2]] for i in range(0, len(l_split), 3)}
     return res_dct
+
+
+def get_image_area(x1, x2, y1, y2):
+    xDiff = abs(x1 - x2)
+    yDiff = abs(y1 - y2)
+
+    area = xDiff * yDiff
+
+    return str(area)
+
+
+def write_json(image_labels, image_path):
+    storage_client = storage.Client()
+
+    bucket = storage_client.get_bucket("dev-object_ident_result_sink")
+    filename = image_path.split("/")[-1].split(".")[0]
+
+    blob = bucket.blob("{}.json".format(filename))
+    blob.upload_from_string(data=json.dumps(image_labels, indent=2), content_type='application/json')
 
 
 def draw_bbox(image, bboxes, CLASSES=YOLO_COCO_CLASSES, show_label=True, show_confidence=True,
@@ -175,7 +196,7 @@ def draw_bbox(image, bboxes, CLASSES=YOLO_COCO_CLASSES, show_label=True, show_co
 
             try:
                 label = "{}".format(NUM_CLASS[class_ind]) + score_str
-                image_labels.append(list_to_dict(label))
+                image_labels.append(list_to_dict(label, get_image_area(x1, x2, y1, y2)))
             except KeyError:
                 print("You received KeyError, this might be that you are trying to use yolo original weights")
                 print("while using custom classes, if using custom model in configs.py set YOLO_CUSTOM_WEIGHTS = True")
@@ -191,9 +212,7 @@ def draw_bbox(image, bboxes, CLASSES=YOLO_COCO_CLASSES, show_label=True, show_co
             cv2.putText(image, label, (x1, y1 - 4), cv2.FONT_HERSHEY_COMPLEX_SMALL,
                         fontScale, Text_colors, bbox_thick, lineType=cv2.LINE_AA)
 
-    filename = image_path.split("/")[-1].split(".")[0]
-    with open("{}.json".format(filename), "w") as final:
-        json.dump(image_labels, final, indent=2)
+    write_json(image_labels, image_path)
 
     return image
 
