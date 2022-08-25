@@ -17,7 +17,7 @@ from yolov3.utils import detect_image, detect_realtime, detect_video, Load_Yolo_
 from yolov3.configs import *
 
 image_path   = "./IMAGES/plate_2.jpg"
-video_path   = "./IMAGES/test.mp4"
+video_path   = "IMAGES/TEST_IMAGES/test.mp4"
 
 yolo = Load_Yolo_model()
 detect_image(yolo, image_path, "./IMAGES/plate_1_detect.jpg", input_size=YOLO_INPUT_SIZE, show=True, CLASSES=TRAIN_CLASSES, rectangle_colors=(255,0,0))
